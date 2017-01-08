@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">BCPLite</string>
+
+    <string name="category_respond">RESPOND</string>
+    <string name="category_recover">RECOVER</string>
+    <string name="category_resume">RESUME</string>
+
+    <string name="step_action_assign">Assign</string>
+    <string name="step_action_comment">Comment</string>
+    <string name="step_action_status">Status</string>
+
+    <string name="step_select_assign">Assign to:</string>
+    <string name="step_select_status">Status:</string>
+
+    <string name="activity_main">Home</string>
+    <string name="activity_summary">Summary</string>
+    <string name="activity_detail">Detail</string>
+
+    <string name="step_comment">Comments:</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+</resources>
