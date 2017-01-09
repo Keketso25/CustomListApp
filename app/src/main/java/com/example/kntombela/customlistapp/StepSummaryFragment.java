@@ -6,11 +6,17 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ListAdapter;
 import android.widget.ListView;
+
+import com.example.kntombela.customlistapp.utilities.NetworkUtils;
+import com.example.kntombela.customlistapp.utilities.StepJsonUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,10 +37,10 @@ import java.util.ArrayList;
  */
 public class StepSummaryFragment extends Fragment {
 
-    ListView list;
-    StepAdapter adapter;
+    //Member Variables
+    RecyclerView mStepList;
+    ListAdapter mListAdaper;
     public ArrayList<Step> StepSummaryList = new ArrayList<Step>();
-    Fragment thisFragment = this;
 
     public StepSummaryFragment() {
         // Required empty public constructor
@@ -50,14 +56,11 @@ public class StepSummaryFragment extends Fragment {
 
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_step_summary, container, false);
-        list = (ListView) rootView.findViewById(R.id.lstSummary);
+        mStepList = (RecyclerView) rootView.findViewById(R.id.lstSummary);
 
-        /*Add Data to ArrayList
-        setListData();
-
-        /**************** Attach Array List to Adapter ********
-        adapter = new StepAdapter(getActivity(), StepSummaryList);
-        list.setAdapter(adapter);*/
+        //Set Layout Manager
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext());
+        mStepList.setLayoutManager(layoutManager);
 
         //Populate Listview using background task
         GetSteps getSteps = new GetSteps();
@@ -81,98 +84,26 @@ public class StepSummaryFragment extends Fragment {
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
 
-        private Step [] getStepListFromJson(String JSonString)
-                throws JSONException {
-
-            // These are the names of the JSON objects that need to be extracted.
-            final String JsonArrayName = "step";
-            final String colStepID = "stepID";
-            final String colStepNumber = "stepNumber";
-            final String colStepTitle = "stepTitle";
-            final String colStepSummary = "stepSummary";
-            final String colStepDetail = "stepDetail";
-            JSONObject stepJson = new JSONObject(JSonString);
-            JSONArray step = stepJson.getJSONArray(JsonArrayName);
-
-
-
-            Step[] resultObj = new Step[step.length()];
-            for(int i = 0; i < step.length(); i++) {
-
-                JSONObject d = step.getJSONObject(i);
-                resultObj[i] = new Step("IMP " + d.getString(colStepNumber), d.getString(colStepTitle),
-                        d.getString(colStepSummary), d.getString(colStepDetail));
-
-            }
-
-            return resultObj;
-        }
-
         @Override
         protected Step[] doInBackground(Void... params) {
 
             try {
 
-                /* If there's no zip code, there's nothing to look up. */
-                if (params.length == 0) {
-                    return null;
-                }
+                URL url = new URL("http://192.168.8.100/bcp_connect/get_steps.php");
 
-                URL url = new URL("http://192.168.8.101/bcp_connect/get_steps.php");
+                //Read inputstream from BCPDb
+                StepJsonStr = NetworkUtils
+                        .getResponseFromHttpUrl(url);
 
-                // Create the request to OpenWeatherMap, and open the connection
-                urlConnection = (HttpURLConnection) url.openConnection();
-                urlConnection.setRequestMethod("GET");
-                urlConnection.connect();
+                //Return parsed Json object
+                return StepJsonUtils.getStepListFromJson(StepJsonStr);
 
-                // Read the input stream into a String
-                InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
-                if (inputStream == null) {
-                    // Nothing to do.
-                    return null;
-                }
-                reader = new BufferedReader(new InputStreamReader(inputStream));
-
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
-                    // But it does make debugging a *lot* easier if you print out the completed
-                    // buffer for debugging.
-                    buffer.append(line + "\n");
-                }
-
-                if (buffer.length() == 0) {
-                    // Stream was empty.  No point in parsing.
-                    return null;
-                }
-                StepJsonStr = buffer.toString();
-                Log.v(LogTag, "Step JSon: " + StepJsonStr);
-                return getStepListFromJson(StepJsonStr);
-
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Log.e(LogTag, "Error ", e);
                 // If the code didn't successfully get the bcp data, there's no point in attemping
                 // to parse it.
                 return null;
-            } catch (JSONException e) {
-                Log.e(LogTag, e.getMessage(), e);
-                e.printStackTrace();
-            } finally {
-                if (urlConnection != null) {
-                    urlConnection.disconnect();
-                }
-                if (reader != null) {
-                    try {
-                        reader.close();
-                    } catch (final IOException e) {
-                        Log.e(LogTag, "Error closing stream", e);
-                    }
-                }
             }
-
-            // This will only happen if there was an error getting or parsing the department json.
-            return null;
         }
 
         @Override
@@ -184,12 +115,10 @@ public class StepSummaryFragment extends Fragment {
                     StepSummaryList.add(StepObj);
                 }
                 // Attach adapter
-                adapter = new StepAdapter(getActivity(), StepSummaryList, StepSummaryFragment.this);
-                list.setAdapter(adapter);
+                mListAdaper = new ListAdapter(getActivity(), StepSummaryList, StepSummaryFragment.this);
+                mStepList.setAdapter(mListAdaper);
 
             }
         }
-
     }
-
 }
